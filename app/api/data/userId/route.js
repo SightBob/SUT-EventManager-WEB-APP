@@ -15,15 +15,17 @@ export async function GET(req){
                 message: "login pls",
             });
         }
-        const getPost = await Post.find({ organizer_id: Userid });
+        const getPost = await Post.find({ 
+            organizer_id: Userid 
+        }).sort({ created_at: -1 });
 
         return NextResponse.json({
             getPost,
         });
 
-
     } catch (error) {
         console.log("Error get by user id: ", error);
+        return NextResponse.json({ error: "เกิดข้อผิดพลาดในการดึงข้อมูล" }, { status: 500 });
     }
 
 }

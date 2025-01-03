@@ -18,6 +18,7 @@ const PostActivity = () => {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [actionType, setActionType] = useState("");
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     fetchPosts();
@@ -55,6 +56,11 @@ const PostActivity = () => {
       return;
     }
 
+    if (!actionType) {
+      toast.error('กรุณาเลือกประเภทการไม่อนุมัติ');
+      return;
+    }
+
     try {
       await axios.put('/api/getdata', {
         id: selectedPostId,
@@ -63,13 +69,25 @@ const PostActivity = () => {
         rejection_reason: rejectionReason
       });
       
-      toast.success(actionType === 'reject' ? 'ปฏิเสธโพสต์เรียบร้อย' : 'ส่งกลับไปแก้ไขเรียบร้อย');
+      const message = actionType === 'rejected' ? 'ปฏิเสธโพสต์เรียบร้อย' : 'ส่งกลับไปแก้ไขเรียบร้อย';
+      toast.success(message);
       setRejectModalOpen(false);
       setRejectionReason("");
       setActionType("");
       fetchPosts();
     } catch (error) {
       toast.error('เกิดข้อผิดพลาด');
+    }
+  };
+
+  const handleDelete = async (postId) => {
+    try {
+      await axios.delete(`/api/getdata?id=${postId}`);
+      toast.success('ลบโพสต์เรียบร้อย');
+      setDeleteModalOpen(false);
+      fetchPosts();
+    } catch (error) {
+      toast.error('เกิดข้อผิดพลาดในการลบโพสต์');
     }
   };
 
@@ -86,6 +104,8 @@ const PostActivity = () => {
         return <Chip color="success">อนุมัติแล้ว</Chip>;
       case 'rejected':
         return <Chip color="danger">ไม่อนุมัติ</Chip>;
+      case 'revision':
+        return <Chip color="warning" variant="dot">ส่งกลับไปแก้ไข</Chip>;
       default:
         return null;
     }
@@ -183,6 +203,17 @@ const PostActivity = () => {
                           </Button>
                         </>
                       )}
+                      <Button
+                        color="danger"
+                        size="sm"
+                        variant="flat"
+                        onClick={() => {
+                          setSelectedPostId(post._id);
+                          setDeleteModalOpen(true);
+                        }}
+                      >
+                        ลบ
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -308,6 +339,7 @@ const PostActivity = () => {
         onClose={() => {
           setRejectModalOpen(false);
           setRejectionReason("");
+          setActionType("");
         }}
       >
         <ModalContent>
@@ -319,8 +351,8 @@ const PostActivity = () => {
               <div className="flex gap-2">
                 <Button 
                   color="danger" 
-                  onClick={() => setActionType('reject')}
-                  className={actionType === 'reject' ? 'opacity-100' : 'opacity-50'}
+                  onClick={() => setActionType('rejected')}
+                  className={actionType === 'rejected' ? 'opacity-100' : 'opacity-50'}
                 >
                   ไม่อนุมัติ
                 </Button>
@@ -334,7 +366,7 @@ const PostActivity = () => {
               </div>
               <Input
                 type="text"
-                placeholder={actionType === 'reject' ? "เหตุผลที่ไม่อนุมัติ" : "ระบุสิ่งที่ต้องการให้แก้ไข"}
+                placeholder={actionType === 'rejected' ? "เหตุผลที่ไม่อนุมัติ" : "ระบุสิ่งที่ต้องการให้แก้ไข"}
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
               />
@@ -351,6 +383,31 @@ const PostActivity = () => {
                 setRejectionReason("");
                 setActionType("");
               }}
+            >
+              ยกเลิก
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+      >
+        <ModalContent>
+          <ModalHeader>
+            <h3 className="text-lg font-semibold">ยืนยันการลบ</h3>
+          </ModalHeader>
+          <ModalBody>
+            <p>คุณแน่ใจหรือไม่ที่จะลบโพสต์นี้?</p>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="danger" onClick={() => handleDelete(selectedPostId)}>
+              ยืนยัน
+            </Button>
+            <Button
+              color="default"
+              onClick={() => setDeleteModalOpen(false)}
             >
               ยกเลิก
             </Button>

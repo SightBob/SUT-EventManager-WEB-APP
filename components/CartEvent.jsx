@@ -22,7 +22,8 @@ const CartEvent = ({
  favorites=[], 
  onFavoriteToggle, 
  onDelete, 
- views=0
+ views=0,
+ status=""
 }) => {
  const [isFavorited, setIsFavorited] = useState(favorites.includes(userId));
   const toggleFavorite = async () => {
@@ -165,19 +166,29 @@ const CartEvent = ({
         <CardBody className="p-0">
          <div className="relative w-full h-[250px] max-[440px]:h-[200px]">
            <Image
-             className="object-cover rounded-t-lg"
+             className="object-cover rounded-t-lg cursor-pointer"
              fill
              style={{ objectFit: "cover" }}
              alt="image event"
              src={img ? img : "https://oreg.rmutt.ac.th/wp-content/uploads/2019/01/40275-Converted-01.png"}
+             onClick={() => {
+               if (type === "edit" && (status === 'approved' || status === 'revision')) {
+                 window.location.href = `/editEvent/${id}`;
+               } else {
+                 window.location.href = `/page/${id}`;
+               }
+             }}
            />
          </div>
          <div className="p-4">
            <div className="text-[#FF6600]">
              <h3 className="line-clamp-1 text-2xl max-[1521px]:text-xl w-full font-semibold" >
-             <Link href={`/page/${id}`} className="hover:underline">
+             <Link 
+               href={type === "edit" && (status === 'approved' || status === 'revision') ? `/editEvent/${id}` : `/page/${id}`} 
+               className="hover:underline"
+             >
                 {title ? title : "เปิดโลกชวนชมรมเปิดบูธกิจกรรม"}
-            </Link>
+             </Link>
              </h3>
              <h5 className="line-clamp-1 text-lg max-[1521px]:text-lg">
                {start_date ? start_date : "วันที่ 17-26 กรกฏาคม 2567"} เวลา{" "}
@@ -192,14 +203,16 @@ const CartEvent = ({
         <CardFooter className="flex justify-between items-center px-4 pb-4">
          {type === "edit" ? (
            <div className="flex items-center gap-2">
-             <Button
-               as={Link}
-               href={`/editEvent/${id}`}
-               color="default"
-               variant="flat"
-             >
-               แก้ไข
-             </Button>
+             {(status === 'approved' || status === 'revision') && (
+               <Button
+                 as={Link}
+                 href={`/editEvent/${id}`}
+                 color="default"
+                 variant="flat"
+               >
+                 แก้ไข
+               </Button>
+             )}
              {member === "yes" && (
                <Button
                  as={Link}

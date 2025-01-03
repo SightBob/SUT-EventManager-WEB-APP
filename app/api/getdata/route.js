@@ -8,23 +8,18 @@ export async function GET(req) {
     try {
         await dbConnect();
         
-        // ดึงเพสต์ทั้งหมด
         const posts = await Post.find()
             .sort({ created_at: -1 });
 
-        // ดึง ID ของผู้สร้างโพสต์ทั้งหมด
         const organizerIds = posts.map(post => post.organizer_id);
 
-        // ดึงข้อมูลผู้ใช้ที่เกี่ยวข้อง
         const users = await User.find({ uuid: { $in: organizerIds } });
 
-        // สร้าง map ของ username
         const userMap = {};
         users.forEach(user => {
             userMap[user.uuid] = user.username;
         });
 
-        // เพิ่ม username เข้าไปในข้อมูลโพสต์
         const postsWithUsernames = posts.map(post => ({
             ...post.toObject(),
             username: userMap[post.organizer_id] || 'ไม่ระบุชื่อ'
@@ -37,7 +32,6 @@ export async function GET(req) {
     }
 }
 
-// PUT: อัพเดทสถานะการอนุมัติ
 export async function PUT(req) {
     try {
         await dbConnect();
@@ -51,7 +45,7 @@ export async function PUT(req) {
             status,
             approved_by,
             approved_at: status === 'approved' ? new Date() : null,
-            rejection_reason: status === 'rejected' ? rejection_reason : null
+            rejection_reason: (status === 'rejected' || status === 'revision') ? rejection_reason : null
         };
 
         const updatedPost = await Post.findByIdAndUpdate(
@@ -68,6 +62,33 @@ export async function PUT(req) {
     } catch (error) {
         console.error("Error:", error);
         return NextResponse.json({ error: "เกิดข้อผิดพลาดในการอัพเดทสถานะ" }, { status: 500 });
+    }
+}
+
+// DELETE: ลบโพสต์
+export async function DELETE(req) {
+    try {
+        await dbConnect();
+        
+        // รับ ID จาก query parameters
+        const { searchParams } = new URL(req.url);
+        const id = searchParams.get('id');
+
+        if (!id) {
+            return NextResponse.json({ error: "ไม่พบ ID ของโพสต์" }, { status: 400 });
+        }
+
+        // ลบโพสต์
+        const deletedPost = await Post.findByIdAndDelete(id);
+        
+        if (!deletedPost) {
+            return NextResponse.json({ error: "ไม่พบโพสต์ที่ต้องการลบ" }, { status: 404 });
+        }
+
+        return NextResponse.json({ message: "ลบโพสต์เรียบร้อย" }, { status: 200 });
+    } catch (error) {
+        console.error("Error:", error);
+        return NextResponse.json({ error: "เกิดข้อผิดพลาดในการลบโพสต์" }, { status: 500 });
     }
 }
 

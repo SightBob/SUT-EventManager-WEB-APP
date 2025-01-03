@@ -15,7 +15,12 @@ import {
   SelectItem,
   Checkbox,
   Card,
-  Chip
+  Chip,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter
 } from "@nextui-org/react";
 import CartEvent from '@/components/CartEvent';
 import { Toaster, toast } from 'react-hot-toast';
@@ -42,6 +47,9 @@ const Page = () => {
         register_end_date: '',
         register_end_time: ''
     });
+
+    const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+    const [selectedPostToDelete, setSelectedPostToDelete] = useState(null);
 
      // สร้าง Custom Upload Adapter
      class CloudinaryUploadAdapter {
@@ -306,6 +314,21 @@ const Page = () => {
         }
     }, [activeSection, session?.user?.uuid]);
 
+    // เพิ่ม interval เพื่อเช็คสถานะโพสต์ทุก 10 วินาที
+    useEffect(() => {
+        let interval;
+        if (activeSection === "posts" && session?.user?.uuid) {
+            interval = setInterval(() => {
+                fetchMyData();
+            }, 10000); // เช็คทุก 10 วินาที
+        }
+        return () => {
+            if (interval) {
+                clearInterval(interval);
+            }
+        };
+    }, [activeSection, session?.user?.uuid]);
+
     const handleDelete = async (postId) => {
         try {
             // อัพเดท state ทันทีเพื่อลบ post จาก UI
@@ -326,6 +349,8 @@ const Page = () => {
                 return <Chip color="success">อนุมัติแล้ว</Chip>;
             case 'rejected':
                 return <Chip color="danger">ไม่อนุมัติ</Chip>;
+            case 'revision':
+                return <Chip color="warning" variant="dot">ส่งกลับไปแก้ไข</Chip>;
             default:
                 return null;
         }
@@ -776,14 +801,43 @@ const Page = () => {
                                             favorites={item.favorites} 
                                             views={item.views}
                                             onDelete={handleDelete}
+                                            status={item.status}
                                         />
-                                        <div className="mt-2">
+                                        <div className="mt-2 space-y-2">
+                                            <div className="p-3 flex items-start space-x-2">
                                             {renderPostStatus(item.status)}
-                                            {item.status === 'rejected' && (
-                                                <p className="text-red-500 text-sm mt-1">
-                                                    เหตุผล: {item.rejection_reason}
-                                                </p>
+                                            {(item.status === 'rejected' || item.status === 'revision') && (
+                                                <div className="bg-red-50 rounded-lg">
+                                                    <div className="">
+                                                    <p className="text-red-500 text-sm">
+                                                        เหตุผล: {item.rejection_reason}
+                                                    </p>
+                                                    {item.status === 'rejected' ? (
+                                                        <Button
+                                                            color="primary"
+                                                            size="sm"
+                                                            className="mt-2"
+                                                            onClick={() => {
+                                                                setSelectedPostToDelete(item);
+                                                                setConfirmModalOpen(true);
+                                                            }}
+                                                        >
+                                                            สร้างโพสต์ใหม่
+                                                        </Button>
+                                                    ) : (
+                                                        <Button
+                                                            color="warning"
+                                                            size="sm"
+                                                            className="mt-2"
+                                                            onClick={() => router.push(`/editEvent/${item._id}`)}
+                                                        >
+                                                            แก้ไขโพสต์
+                                                        </Button>
+                                                    )}
+                                                    </div>
+                                                </div>
                                             )}
+                                            </div>
                                         </div>
                                     </div>
                                 ))
@@ -816,6 +870,75 @@ const Page = () => {
                     </Button>
                 </Card>
             )}
+
+            {/* เพิ่ม Modal สำหรับยืนยันการสร้างโพสต์ใหม่ */}
+            <Modal 
+                isOpen={confirmModalOpen} 
+                onClose={() => {
+                    setConfirmModalOpen(false);
+                    setSelectedPostToDelete(null);
+                }}
+            >
+                <ModalContent>
+                    <ModalHeader>
+                        <h3 className="text-lg font-semibold">ยืนยันการสร้างโพสต์ใหม่</h3>
+                    </ModalHeader>
+                    <ModalBody>
+                        <p>คุณต้องการสร้างโพสต์ใหม่และลบโพสต์เก่าใช่หรือไม่?</p>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button 
+                            color="primary"
+                            onClick={async () => {
+                                if (selectedPostToDelete) {
+                                    try {
+                                        // ลบโพสต์เก่า
+                                        await axios.delete(`/api/getdata?id=${selectedPostToDelete._id}`);
+                                        
+                                        // อัพเดทฟอร์มด้วยข้อมูลเก่า
+                                        setFormData({
+                                            ...formData,
+                                            title: selectedPostToDelete.title,
+                                            location: selectedPostToDelete.location,
+                                            description: selectedPostToDelete.description,
+                                            member: selectedPostToDelete.member,
+                                            maxParticipants: selectedPostToDelete.maxParticipants,
+                                        });
+                                        setTags(selectedPostToDelete.category || []);
+                                        
+                                        // เปลี่ยนไปที่หน้าฟอร์ม
+                                        setActiveSection('form');
+                                        
+                                        // ปิด Modal
+                                        setConfirmModalOpen(false);
+                                        setSelectedPostToDelete(null);
+                                        
+                                        // แจ้งเตือนสำเร็จ
+                                        toast.success('ลบโพสต์เก่าเรียบร้อย กรุณากรอกข้อมูลเพื่อสร้างโพสต์ใหม่');
+                                        
+                                        // อัพเดทรายการโพสต์
+                                        fetchMyData();
+                                    } catch (error) {
+                                        console.error("Error:", error);
+                                        toast.error('เกิดข้อผิดพลาดในการลบโพสต์');
+                                    }
+                                }
+                            }}
+                        >
+                            ยืนยัน
+                        </Button>
+                        <Button
+                            color="default"
+                            onClick={() => {
+                                setConfirmModalOpen(false);
+                                setSelectedPostToDelete(null);
+                            }}
+                        >
+                            ยกเลิก
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
         </div>
     );
 }   

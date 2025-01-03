@@ -27,19 +27,18 @@ const AdminReports = () => {
     }, []);
 
     const handleDeleteReport = async (reportId) => {
-        if (confirm('คุณแน่ใจว่าต้องการลบรายงานนี้?')) {
+        if (confirm('คุณแน่ใจว่าต้องการลบรายงานและโพสต์นี้?')) {
             try {
                 const response = await axios.delete('/api/report', { data: { reportId } });
                 if (response.data.success) {
-                    // อัปเดตสถานะหรือเรียก fetchReports เพื่อลบข้อมูลจากหน้าจอ
                     setReports(prevReports => prevReports.filter(report => report._id !== reportId));
-                    alert('ลบรายงานสำเร็จ');
+                    alert('ลบรายงานและโพสต์สำเร็จ');
                 } else {
-                    alert('เกิดข้อผิดพลาดในการลบรายงาน');
+                    alert('เกิดข้อผิดพลาดในการลบรายงานและโพสต์');
                 }
             } catch (error) {
                 console.error('Error deleting report:', error);
-                alert('เกิดข้อผิดพลาดในการลบรายงาน');
+                alert('เกิดข้อผิดพลาดในการลบรายงานและโพสต์');
             }
         }
     };

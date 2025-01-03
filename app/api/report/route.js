@@ -2,6 +2,7 @@ import Report from '@/models/Report';
 import { dbConnect } from "@/lib/ConnectDB";
 import { NextResponse } from "next/server";
 import User from '@/models/User';
+import Post from '@/models/Post';
 
 export async function POST(request) {
     await dbConnect(); // เชื่อมต่อกับฐานข้อมูลก่อน
@@ -56,25 +57,34 @@ export async function GET(request) {
 
 
 export async function DELETE(request) {
-  await dbConnect(); // เชื่อมต่อกับฐานข้อมูลก่อน
+    await dbConnect();
 
-  try {
-      const { reportId } = await request.json(); // รับ reportId ที่ต้องการลบ
+    try {
+        const { reportId } = await request.json();
 
-      // ลบรายงานตาม ID ที่ได้รับ
-      const deletedReport = await Report.findByIdAndDelete(reportId);
+        // ค้นหารายงานก่อนที่จะลบ เพื่อเก็บ postId
+        const report = await Report.findById(reportId);
+        if (!report) {
+            return NextResponse.json({ success: false, message: 'ไม่พบรายงานที่ต้องการลบ' }, { status: 404 });
+        }
 
-      if (!deletedReport) {
-          return NextResponse.json({ success: false, message: 'ไม่พบรายงานที่ต้องการลบ' }, { status: 404 });
-      }
+        // ลบโพสต์ที่ถูกรายงาน
+        await Post.findByIdAndDelete(report.postId);
 
-      return NextResponse.json({ success: true, message: 'ลบรายงานสำเร็จ', report: deletedReport });
-  } catch (error) {
-      console.error("เกิดข้อผิดพลาดในการลบข้อมูล:", error);
-      return NextResponse.json({
-          success: false,
-          message: 'เกิดข้อผิดพลาดในการลบข้อมูล',
-          error: error.message || 'ไม่มีข้อมูล'
-      }, { status: 500 });
-  }
+        // ลบรายงาน
+        const deletedReport = await Report.findByIdAndDelete(reportId);
+
+        return NextResponse.json({ 
+            success: true, 
+            message: 'ลบรายงานและโพสต์สำเร็จ', 
+            report: deletedReport 
+        });
+    } catch (error) {
+        console.error("เกิดข้อผิดพลาดในการลบข้อมูล:", error);
+        return NextResponse.json({
+            success: false,
+            message: 'เกิดข้อผิดพลาดในการลบข้อมูล',
+            error: error.message || 'ไม่มีข้อมูล'
+        }, { status: 500 });
+    }
 }

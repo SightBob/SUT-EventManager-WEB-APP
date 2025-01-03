@@ -22,7 +22,9 @@ const CalendarComponent = ({ onDateChange, selectedDate }) => {
     const fetchEvents = async () => {
       try {
         const response = await axios.get('/api/post');
-        setEvents(response.data.getAllPost);
+        // กรองเฉพาะโพสต์ที่ได้รับการอนุมัติ
+        const approvedEvents = response.data.getAllPost.filter(event => event.status === 'approved');
+        setEvents(approvedEvents);
       } catch (error) {
         console.error('Error fetching events:', error);
       } finally {
@@ -40,7 +42,7 @@ const CalendarComponent = ({ onDateChange, selectedDate }) => {
     // แปลงวันที่ที่ได้รับเป็นรูปแบบ YYYY-MM-DD
     const formattedDate = `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
 
-    // ตรวจสอบว่ามีกิจกรรมในวันนี้หรือไม่
+    // ตรวจสอบว่ามีกิจกรรมที่ได้รับการอนุมัติในวันนี้หรือไม่
     return !events.some(event => event.start_date === formattedDate);
   };
 
