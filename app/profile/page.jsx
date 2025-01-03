@@ -398,7 +398,7 @@ const Page = () => {
             <Link
                 href=""
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="bg-[#ff3300] absolute top-3 right-3 px-6 rounded-full py-2 text-white cursor-pointer max-sm:hidden"
+                className="bg-[#ff3300] absolute top-3 right-3 px-6 rounded-full py-2 text-white cursor-pointer"
               >
                 <p className="text-lg">ออกจากระบบ</p>
               </Link>

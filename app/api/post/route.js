@@ -14,7 +14,7 @@ export async function POST(req) {
     try {
         await dbConnect();
 
-        const { uuid, additionalLink, start_date, start_time, end_date, end_time,description, picture, location, tags, title, type, member, maxParticipants, public_id, description_image_ids, register_start_date, register_start_time, register_end_date, register_end_time } = await req.json();
+        const { uuid, additionalLink, start_date, start_time, end_date, end_time, description, picture, location, tags, title, type, member, maxParticipants, public_id, description_image_ids, register_start_date, register_start_time, register_end_date, register_end_time } = await req.json();
  
         const newpost = await Post.create({
             organizer_id: uuid,
@@ -36,7 +36,13 @@ export async function POST(req) {
             register_start_date,
             register_start_time,
             register_end_date,
-            register_end_time
+            register_end_time,
+            status: 'pending',
+            approved_by: null,
+            approved_at: null,
+            rejection_reason: null,
+            is_verified_organizer: false,
+            admin_notes: null
         });
         
 
@@ -153,10 +159,10 @@ export async function DELETE(request) {
 
 export async function GET(){
     try {
-        
         await dbConnect();
 
-        const getAllPost = await Post.find();
+        const getAllPost = await Post.find()
+            .sort({ created_at: -1 });
         
         if(!getAllPost){
             return NextResponse.json({
@@ -170,5 +176,6 @@ export async function GET(){
 
     } catch (error) {
         console.log("Error get all post: ", error);
+        return NextResponse.json({ error: "เกิดข้อผิดพลาดในการดึงข้อมูล" }, { status: 500 });
     }
 }

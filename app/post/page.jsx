@@ -77,7 +77,7 @@ const Page = () => {
 
     const editorConfiguration = {
         language: 'th',
-        licenseKey: 'eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3MzU1MTY3OTksImp0aSI6ImRlNjY5NmIxLTI0MDMtNDA3MC1iZmUwLWRhN2Q4ZTQ1MzkwYSIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6ImMxMDE0ZDEyIn0.4OtXqy8mVfBpYZ85-Qxn3pzAHzuaSg0FJOQ3buiL05vxrhznyGdGNEt0n-5eHgzZFD6ef1nv0GP3cqzz2UftoA',
+        // licenseKey: 'eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3MzU1MTY3OTksImp0aSI6ImRlNjY5NmIxLTI0MDMtNDA3MC1iZmUwLWRhN2Q4ZTQ1MzkwYSIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6ImMxMDE0ZDEyIn0.4OtXqy8mVfBpYZ85-Qxn3pzAHzuaSg0FJOQ3buiL05vxrhznyGdGNEt0n-5eHgzZFD6ef1nv0GP3cqzz2UftoA',
         toolbar: [
             "heading",
             "|",
@@ -161,9 +161,7 @@ const Page = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsPosting(true);
-        
-        // สร้าง loading toast
-        const loadingToast = toast.loading('กำลังโพสต์...');
+        const loadingToast = toast.loading('กำลังส่งโพสต์เพื่อรอการอนุมัติ...');
         
         try {
             let imageUrl = null;
@@ -256,21 +254,35 @@ const Page = () => {
                 register_end_time: formData.register_end_time
             };
 
-            console.log('Sending post data:', postData); // เพิ่ม log เพื่อตรวจสอบ
-
             const res = await axios.post('/api/post/', postData);
 
             if (res.status === 201) {
-                // อัพเดท toast เป็นสำเร็จ
-                toast.success('โพสต์สำเร็จแล้ว!', {
+                toast.success('ส่งโพสต์เรียบร้อยแล้ว กรุณารอการอนุมัติ', {
                     id: loadingToast,
                 });
-                // รีเซ็ตฟอร์มหรือ redirect ตามต้องการ
+                // รีเซ็ตฟอร์ม
+                setFormData({
+                    title: '',
+                    start_date: '',
+                    start_time: '',
+                    end_date: '',
+                    end_time: '',
+                    location: '',
+                    description: '',
+                    image: null,
+                    additionalLink: '',
+                    tags: [],
+                    maxParticipants: '',
+                    register_start_date: '',
+                    register_start_time: '',
+                    register_end_date: '',
+                    register_end_time: ''
+                });
+                setTags([]);
             }
         } catch (error) {
             console.error('Error:', error);
-            // อัพเดท toast เป็นข้อผิดพลาด
-            toast.error('เกิดข้อผิดพลาดในการโพสต์ กรุณาลองใหม่อีกครั้ง', {
+            toast.error('เกิดข้อผิดพลาดในการส่งโพสต์ กรุณาลองใหม่อีกครั้ง', {
                 id: loadingToast,
             });
         } finally {
@@ -302,6 +314,20 @@ const Page = () => {
             console.error("Error handling delete:", error);
             // ถ้าเกิดข้อผิดพลาด อาจจะต้อง fetch ข้อมูลใหม่
             fetchMyData();
+        }
+    };
+
+    // แก้ไขการแสดงผลในส่วน posts
+    const renderPostStatus = (status) => {
+        switch(status) {
+            case 'pending':
+                return <Chip color="warning">รอการอนุมัติ</Chip>;
+            case 'approved':
+                return <Chip color="success">อนุมัติแล้ว</Chip>;
+            case 'rejected':
+                return <Chip color="danger">ไม่อนุมัติ</Chip>;
+            default:
+                return null;
         }
     };
 
@@ -734,23 +760,32 @@ const Page = () => {
                         <div className="grid max-[550px]:grid-cols-1 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                             {DataByUserid.length > 0 ? (
                                 DataByUserid.map((item) => (
-                                    <CartEvent 
-                                    key={item._id}
-                                    id={item._id} 
-                                    img={item.picture} 
-                                    title={item.title} 
-                                    start_date={item.start_date} 
-                                    start_time={item.start_time} 
-                                    location={item.location} 
-                                    type="edit" 
-                                    member={item.member} 
-                                    maxParticipants={item.maxParticipants} 
-                                    current_participants={item.current_participants} 
-                                    userId={session?.user?.uuid} 
-                                    favorites={item.favorites} 
-                                    views={item.views}
-                                    onDelete={handleDelete}
-                                />
+                                    <div key={item._id}>
+                                        <CartEvent 
+                                            id={item._id} 
+                                            img={item.picture} 
+                                            title={item.title} 
+                                            start_date={item.start_date} 
+                                            start_time={item.start_time} 
+                                            location={item.location} 
+                                            type="edit" 
+                                            member={item.member} 
+                                            maxParticipants={item.maxParticipants} 
+                                            current_participants={item.current_participants} 
+                                            userId={session?.user?.uuid} 
+                                            favorites={item.favorites} 
+                                            views={item.views}
+                                            onDelete={handleDelete}
+                                        />
+                                        <div className="mt-2">
+                                            {renderPostStatus(item.status)}
+                                            {item.status === 'rejected' && (
+                                                <p className="text-red-500 text-sm mt-1">
+                                                    เหตุผล: {item.rejection_reason}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
                                 ))
                             ) : (
                                 <Card className="col-span-full p-8 text-center">

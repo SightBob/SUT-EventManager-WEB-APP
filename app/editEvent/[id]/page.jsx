@@ -79,7 +79,7 @@ const EditEvent = ({ params }) => {
 
     const editorConfiguration = {
         language: 'th',
-        licenseKey: 'eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3MzU1MTY3OTksImp0aSI6ImRlNjY5NmIxLTI0MDMtNDA3MC1iZmUwLWRhN2Q4ZTQ1MzkwYSIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6ImMxMDE0ZDEyIn0.4OtXqy8mVfBpYZ85-Qxn3pzAHzuaSg0FJOQ3buiL05vxrhznyGdGNEt0n-5eHgzZFD6ef1nv0GP3cqzz2UftoA',
+        // licenseKey: 'eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3MzU1MTY3OTksImp0aSI6ImRlNjY5NmIxLTI0MDMtNDA3MC1iZmUwLWRhN2Q4ZTQ1MzkwYSIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6ImMxMDE0ZDEyIn0.4OtXqy8mVfBpYZ85-Qxn3pzAHzuaSg0FJOQ3buiL05vxrhznyGdGNEt0n-5eHgzZFD6ef1nv0GP3cqzz2UftoA',
         toolbar: [
             "heading",
             "|",
@@ -112,6 +112,17 @@ const EditEvent = ({ params }) => {
                 const eventData = res.data.post.getPost;
                 
                 if (eventData) {
+                    if (eventData.status === 'revision') {
+                        toast.custom((t) => (
+                            <div className="bg-warning-100 border-l-4 border-warning-500 text-warning-700 p-4">
+                                <p className="font-bold">โพสต์นี้ถูกส่งกลับมาให้แก้ไข</p>
+                                <p>เหตุผล: {eventData.rejection_reason}</p>
+                            </div>
+                        ), {
+                            duration: 10000,
+                        });
+                    }
+                    
                     setFormData({
                         title: eventData.title || '',
                         start_date: eventData.start_date || '',
@@ -290,6 +301,8 @@ const EditEvent = ({ params }) => {
                 register_start_time: formData.register_start_time,
                 register_end_date: formData.register_end_date,
                 register_end_time: formData.register_end_time,
+                status: 'pending',
+                rejection_reason: null,
                 updated_at: new Date().toISOString()
             };
 

@@ -100,6 +100,32 @@ const PostSchema = new mongoose.Schema({
     default: 0
   },
   description_image_ids: [String],
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  approved_by: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  approved_at: {
+    type: Date,
+    default: null
+  },
+  rejection_reason: {
+    type: String,
+    default: null
+  },
+  is_verified_organizer: {
+    type: Boolean,
+    default: false
+  },
+  admin_notes: {
+    type: String,
+    default: null
+  },
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
   collection: 'Posts_col'
@@ -117,6 +143,7 @@ PostSchema.virtual('current_participants').get(function() {
 
 // Index for efficient querying
 PostSchema.index({ start_date: 1, category: 1, type: 1 });
+PostSchema.index({ status: 1, created_at: -1 });
 
 // Ensure virtuals are included in toJSON output
 PostSchema.set('toJSON', { virtuals: true });

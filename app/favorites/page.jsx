@@ -8,6 +8,7 @@ import CartActivity from "@/components/CartActivity";
 import Image from 'next/image';
 import { useRouter } from 'next/navigation'; 
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Button, Card } from '@nextui-org/react';
 
 const Page = () => {
   const { data: session } = useSession();
@@ -84,23 +85,25 @@ const Page = () => {
           </div>
         </div>
       ) : (
-        <div className="text-center py-10 relative top-0 left-0 right-0 bottom-0 bg-gray-300 min-h-[calc(100vh_-_8rem)] w-full flex justify-center items-center">
-          <div className="max-w-[350px] h-[400px] w-full bg-white flex flex-col items-center justify-center rounded-md">
-            <div className="rounded-full overflow-hidden">
-              <Image 
-                src="/assets/img_main/profile.png" 
-                layout="responsive"
-                width={250} 
-                height={250} 
-                alt="Profile picture"
-              />
-            </div>
-            <h2 className='mt-8'>กรุณาเข้าสู่ระบบเพื่อเข้าถึงหน้านี้</h2>
-            <button onClick={() => router.push('/login')} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded">
-              ไปยังหน้าเข้าสู่ระบบ
-            </button>
-          </div>
-        </div>
+        <Card className="max-w-md mx-auto p-8 text-center">
+        <Image
+            src="/assets/img_main/profile.png"
+            width={150}
+            height={150}
+            alt="Profile"
+            className="mx-auto rounded-full"
+        />
+        <h2 className="mt-4 text-xl font-semibold">
+            กรุณาเข้าสู่ระบบเพื่อเข้าถึงหน้านี้
+        </h2>
+        <Button
+            color="primary"
+            onClick={() => router.push('/login')}
+            className="mt-4"
+        >
+            ไปยังหน้าเข้าสู่ระบบ
+        </Button>
+    </Card>
       )}
     </div>
   );

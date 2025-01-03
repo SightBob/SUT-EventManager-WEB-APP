@@ -13,17 +13,19 @@ export async function GET(req) {
 
     await dbConnect();
 
-    let query = {};
+    let query = {
+      status: 'approved'
+    };
+
     if (date) {
       query.start_date = date;
-    } else if (info) {
+    }
+    if (info) {
       query.type = info;
     }
 
-    // หาจำนวนรายการทั้งหมด
     const total = await Post.countDocuments(query);
 
-    // ดึงข้อมูลตาม pagination
     let getPost = await Post.find(query)
       .sort({ start_date: -1 })
       .skip(skip)
@@ -31,7 +33,7 @@ export async function GET(req) {
 
     if (getPost.length === 0) {
       return NextResponse.json({
-        message: "No activities found",
+        message: "No approved activities found",
         getPost: [],
         total: 0,
         currentPage: page,

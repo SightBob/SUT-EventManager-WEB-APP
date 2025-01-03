@@ -9,8 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@ckeditor/ckeditor5-build-classic": "^44.0.0",
-    "@ckeditor/ckeditor5-react": "^9.4.0",
+    "@ckeditor/ckeditor5-build-classic": "^43.3.1",
+    "@ckeditor/ckeditor5-react": "^9.3.1",
     "@internationalized/date": "^3.6.0",
     "@nextui-org/react": "^2.6.8",
     "@nextui-org/theme": "^2.4.3",
