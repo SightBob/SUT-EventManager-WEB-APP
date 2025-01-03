@@ -44,7 +44,7 @@
     "react-quill": "^2.0.0",
     "react-router-dom": "^6.26.2",
     "react-select": "^5.8.0",
-    "swiper": "^11.1.9",
+    "swiper": "^11.1.15",
     "swr": "^2.2.5",
     "ws": "^8.18.0"
   },
