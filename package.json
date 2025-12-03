@@ -33,7 +33,7 @@
     "next-connect": "^1.0.0",
     "node-cron": "^3.0.3",
     "node-fetch": "^3.3.2",
-    "nodemailer": "^6.9.15",
+    "nodemailer": "^7.0.11",
     "qrcode.react": "^4.0.1",
     "quill": "^2.0.3",
     "react": "^18.3.1",
